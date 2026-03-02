@@ -1,8 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const allowedOrigins = [
-    'http://localhost:5173',                          // Vite local dev
-    'https://frontend-ghod.vercel.app/'             // Vercel production (điền đúng URL sau)
+    'http://localhost:5173',                // Vite local dev
+    'http://localhost:5174',                // Vite local dev (alternate port)
+    'https://frontend-ghod.vercel.app',     // Vercel production
+    'https://frontend-ghod.vercel.app/',    // Vercel production with trailing slash
+    undefined                               // Allow requests without origin header
 ];
 require('dotenv').config();
 
