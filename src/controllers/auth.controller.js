@@ -116,7 +116,9 @@ const getProfile = async (req, res) => {
             [req.user.id]
         );
 
-        res.json(result.rows[0]);
+        res.json({
+            user: result.rows[0]
+        });
     } catch (err) {
         res.status(500).json({ message: "Lỗi server" });
     }

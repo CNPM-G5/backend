@@ -1,8 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const allowedOrigins = [
-    'http://localhost:5173',                          // Vite local dev
-    'https://frontend-ghod.vercel.app/'             // Vercel production (điền đúng URL sau)
+    'http://localhost:5173',                // Vite local dev
+    'http://localhost:5174',                // Vite local dev (alternate port)
+    'https://frontend-ghod.vercel.app',     // Vercel production
+    'https://frontend-ghod.vercel.app/',    // Vercel production with trailing slash
+    undefined                               // Allow requests without origin header            // Vercel production (điền đúng URL sau)
 ];
 require('dotenv').config();
 
@@ -10,6 +13,8 @@ const app = express();
 
 // IMPORT ROUTES
 const authRoutes = require('./routes/auth.routes');
+const courseRoutes = require("./routes/course.routes");
+const lessonRoutes = require("./routes/lesson.routes");
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -30,6 +35,8 @@ app.get('/', (req, res) => {
 
 // USE ROUTES
 app.use('/api/auth', authRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/lessons", lessonRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
