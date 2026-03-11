@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const aiController = require("../controllers/aiController");
-const auth = require("../middleware/auth");
+const auth = require("../middlewares/auth");
 
 router.post("/chat", auth, aiController.chatWithLesson);
 
