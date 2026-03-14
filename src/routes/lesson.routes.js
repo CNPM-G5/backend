@@ -3,7 +3,8 @@ const router = express.Router();
 
 const lessonController = require("../controllers/lesson.controller");
 const { protect } = require("../middlewares/auth.middleware");
-const { isAdmin } = require("../middlewares/role.middleware");
+const adminOnly = require("../middlewares/adminOnly");
+const auth = require("../middlewares/auth");
 
 // PUBLIC
 router.get("/:id", lessonController.getLessonById);
@@ -12,8 +13,8 @@ router.get("/:id", lessonController.getLessonById);
 router.post("/:id/complete", protect, lessonController.completeLesson);
 
 // ADMIN
-router.post("/", protect, isAdmin, lessonController.createLesson);
-router.put("/:id", protect, isAdmin, lessonController.updateLesson);
-router.delete("/:id", protect, isAdmin, lessonController.deleteLesson);
+router.post("/", protect, adminOnly, lessonController.createLesson);
+router.put("/:id", protect, adminOnly, lessonController.updateLesson);
+router.delete("/:id", protect, adminOnly, lessonController.deleteLesson);
 
 module.exports = router;
