@@ -42,6 +42,7 @@ app.use("/api/lessons", lessonRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/progress", progressRoutes);
 
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
