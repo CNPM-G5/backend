@@ -19,6 +19,8 @@ const app = express();
 const authRoutes = require('./routes/auth.routes');
 const courseRoutes = require("./routes/course.routes");
 const lessonRoutes = require("./routes/lesson.routes");
+const aiRoutes = require("./routes/ai.routes");
+const progressRoutes = require("./routes/progress.routes");
 
 app.use(cors({
     origin: function (origin, callback) {
@@ -41,6 +43,8 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/lessons", lessonRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/progress", progressRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
