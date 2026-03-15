@@ -1,0 +1,340 @@
+{
+  "info": {
+    "name": "PLearn Backend API",
+    "description": "Full API documentation for PLearn backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3001" },
+    { "key": "admin_token", "value": "" },
+    { "key": "user_token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"user@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["if(pm.response.code===200){pm.collectionVariables.set('admin_token',pm.response.json().token)}"] }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@plearn.com\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [{
+            "listen": "test",
+            "script": { "exec": ["if(pm.response.code===200){pm.collectionVariables.set('user_token',pm.response.json().token)}"] }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"postman@test.com\",\n  \"password\": \"postman123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/auth/profile", "host": ["{{base_url}}"], "path": ["api","auth","profile"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses — Public",
+      "item": [
+        {
+          "name": "GET All Courses",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/courses", "host": ["{{base_url}}"], "path": ["api","courses"] }
+          }
+        },
+        {
+          "name": "GET Course by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/courses/2", "host": ["{{base_url}}"], "path": ["api","courses","2"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses — Admin Only",
+      "item": [
+        {
+          "name": "POST Create Course (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Course\",\n  \"description\": \"Course description\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/courses", "host": ["{{base_url}}"], "path": ["api","courses"] }
+          }
+        },
+        {
+          "name": "POST Create Course (User → 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Should Fail\",\n  \"description\": \"User cannot create\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/courses", "host": ["{{base_url}}"], "path": ["api","courses"] }
+          }
+        },
+        {
+          "name": "PUT Update Course (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Course\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/courses/2", "host": ["{{base_url}}"], "path": ["api","courses","2"] }
+          }
+        },
+        {
+          "name": "PUT Update Course (User → 403)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hack\",\n  \"description\": \"Hack\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/courses/2", "host": ["{{base_url}}"], "path": ["api","courses","2"] }
+          }
+        },
+        {
+          "name": "DELETE Course (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/courses/99", "host": ["{{base_url}}"], "path": ["api","courses","99"] }
+          }
+        },
+        {
+          "name": "DELETE Course (User → 403)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/courses/2", "host": ["{{base_url}}"], "path": ["api","courses","2"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lessons — Public",
+      "item": [
+        {
+          "name": "GET Lesson by ID (no token)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/lessons/1", "host": ["{{base_url}}"], "path": ["api","lessons","1"] }
+          }
+        },
+        {
+          "name": "GET Lesson by ID (with token)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/lessons/1", "host": ["{{base_url}}"], "path": ["api","lessons","1"] }
+          }
+        },
+        {
+          "name": "POST Complete Lesson",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/lessons/1/complete", "host": ["{{base_url}}"], "path": ["api","lessons","1","complete"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lessons — Admin Only",
+      "item": [
+        {
+          "name": "POST Create Lesson (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"course_id\": 2,\n  \"title\": \"New Lesson\",\n  \"content\": \"Lesson content here\",\n  \"order_index\": 4\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/lessons", "host": ["{{base_url}}"], "path": ["api","lessons"] }
+          }
+        },
+        {
+          "name": "POST Create Lesson (User → 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"course_id\": 2,\n  \"title\": \"Hack\",\n  \"content\": \"Hack\",\n  \"order_index\": 99\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/lessons", "host": ["{{base_url}}"], "path": ["api","lessons"] }
+          }
+        },
+        {
+          "name": "PUT Update Lesson (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Lesson\",\n  \"content\": \"Updated content\",\n  \"order_index\": 1\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/lessons/1", "host": ["{{base_url}}"], "path": ["api","lessons","1"] }
+          }
+        },
+        {
+          "name": "PUT Update Lesson (User → 403)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hack\",\n  \"content\": \"Hack\",\n  \"order_index\": 1\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/lessons/1", "host": ["{{base_url}}"], "path": ["api","lessons","1"] }
+          }
+        },
+        {
+          "name": "DELETE Lesson (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{base_url}}/api/lessons/99", "host": ["{{base_url}}"], "path": ["api","lessons","99"] }
+          }
+        },
+        {
+          "name": "DELETE Lesson (User → 403)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/lessons/1", "host": ["{{base_url}}"], "path": ["api","lessons","1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Progress",
+      "item": [
+        {
+          "name": "GET Course Progress",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{user_token}}" }],
+            "url": { "raw": "{{base_url}}/api/progress/2", "host": ["{{base_url}}"], "path": ["api","progress","2"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Chat",
+      "item": [
+        {
+          "name": "Chat with Lesson Context",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Iterative Model có ưu điểm gì?\",\n  \"lessonId\": 1\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/ai/chat", "host": ["{{base_url}}"], "path": ["api","ai","chat"] }
+          }
+        },
+        {
+          "name": "Chat about Progress",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{user_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Tiến độ học tập của tôi thế nào?\",\n  \"courseId\": 2\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/ai/chat", "host": ["{{base_url}}"], "path": ["api","ai","chat"] }
+          }
+        },
+        {
+          "name": "Chat without token (→ 401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Test\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/ai/chat", "host": ["{{base_url}}"], "path": ["api","ai","chat"] }
+          }
+        }
+      ]
+    }
+  ]
+}
