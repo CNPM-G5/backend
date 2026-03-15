@@ -4,7 +4,6 @@ const router = express.Router();
 const courseController = require("../controllers/course.controller");
 const { protect } = require("../middlewares/auth.middleware");
 const adminOnly = require("../middlewares/adminOnly");
-const auth = require("../middlewares/auth");
 
 // PUBLIC
 router.get("/", courseController.getAllCourses);
