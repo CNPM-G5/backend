@@ -1,17 +1,12 @@
 const express = require('express');
 const cors = require('cors');
-const allowedOrigins = [
-    'http://localhost:5173',                // Vite local dev
-    'http://localhost:5174',                // Vite local dev (alternate port)
-    'https://frontend-ghod.vercel.app',     // Vercel production
-    'https://frontend-ghod.vercel.app/',    // Vercel production with trailing slash
-<<<<<<< HEAD
-    undefined                               // Allow requests without origin header
-=======
-    undefined                               // Allow requests without origin header            // Vercel production (điền đúng URL sau)
->>>>>>> 976c2bd5ffccdf75625c8a915ef48e01b7358247
-];
 require('dotenv').config();
+
+const allowedOrigins = [
+    'http://localhost:5173',            // Vite local dev
+    'http://localhost:5174',            // Vite local dev (alternate port)
+    'https://frontend-ghod.vercel.app'  // Vercel production
+];
 
 const app = express();
 
@@ -22,8 +17,10 @@ const lessonRoutes = require("./routes/lesson.routes");
 const aiRoutes = require("./routes/ai.routes");
 const progressRoutes = require("./routes/progress.routes");
 
+// CORS CONFIG
 app.use(cors({
     origin: function (origin, callback) {
+        // allow requests with no origin (mobile apps, curl, postman...)
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
@@ -32,6 +29,7 @@ app.use(cors({
     },
     credentials: true
 }));
+
 app.use(express.json());
 
 // Health check
@@ -46,8 +44,9 @@ app.use("/api/lessons", lessonRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/progress", progressRoutes);
 
-
+// SERVER START
 const PORT = process.env.PORT || 3001;
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
