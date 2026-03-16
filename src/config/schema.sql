@@ -1,3 +1,9 @@
+-- Drop tables if they exist (for fresh migration)
+DROP TABLE IF EXISTS user_progress CASCADE;
+DROP TABLE IF EXISTS lessons CASCADE;
+DROP TABLE IF EXISTS courses CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
