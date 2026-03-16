@@ -4,8 +4,8 @@ const router = express.Router();
 const progressController = require("../controllers/progress.controller");
 const { protect } = require("../middlewares/auth.middleware");
 
-// GET /api/progress/:courseId - Get course progress for user
+// Route cụ thể phải đặt TRƯỚC route có param /:courseId
+router.get("/completed-courses", protect, progressController.getCompletedCourses);
 router.get("/:courseId", protect, progressController.getCourseProgress);
-router.get("/completed-courses", auth, progressController.getCompletedCourses);
 
 module.exports = router;

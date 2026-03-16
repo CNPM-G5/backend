@@ -168,5 +168,6 @@ const changePassword = async (req, res) => {
 module.exports = {
     register,
     login,
-    getProfile
+    getProfile,
+    changePassword
 };
