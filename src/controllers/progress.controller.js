@@ -72,3 +72,30 @@ exports.getCourseProgress = async (req, res) => {
     });
   }
 };
+
+exports.getCompletedCourses = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+
+    const result = await pool.query(`
+      SELECT c.id, c.title
+      FROM courses c
+      JOIN lessons l ON l.course_id = c.id
+      LEFT JOIN user_progress up 
+        ON up.lesson_id = l.id AND up.user_id = $1
+      GROUP BY c.id
+      HAVING COUNT(l.id) = COUNT(
+        CASE WHEN up.completed = true THEN 1 END
+      )
+    `, [userId]);
+
+    res.json({
+      completed_courses: result.rows.length,
+      courses: result.rows
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

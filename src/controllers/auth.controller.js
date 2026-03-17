@@ -124,8 +124,50 @@ const getProfile = async (req, res) => {
     }
 };
 
+// ================= CHANGE PASSWORD =================
+const changePassword = async (req, res) => {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    try {
+        const user = await pool.query(
+            "SELECT password FROM users WHERE id=$1",
+            [userId]
+        );
+
+        if (user.rows.length === 0) {
+            return res.status(404).json({ message: "Không tìm thấy người dùng" });
+        }
+
+        const validPassword = await bcrypt.compare(
+            oldPassword,
+            user.rows[0].password
+        );
+
+        if (!validPassword) {
+            return res.status(400).json({ message: "Mật khẩu cũ không đúng" });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await pool.query(
+            "UPDATE users SET password=$1 WHERE id=$2",
+            [hashedPassword, userId]
+        );
+
+        res.json({
+            message: "Đổi mật khẩu thành công"
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
 module.exports = {
     register,
     login,
-    getProfile
+    getProfile,
+    changePassword
 };
