@@ -9,7 +9,7 @@ exports.getAllCourses = async (req, res) => {
       FROM courses c
       LEFT JOIN lessons l ON l.course_id = c.id
       GROUP BY c.id
-      ORDER BY c.created_at DESC
+      ORDER BY c.created_at ASC
     `);
 
     res.json({ success: true, data: result.rows });
