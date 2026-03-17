@@ -5,10 +5,9 @@ const lessonController = require("../controllers/lesson.controller");
 const { protect } = require("../middlewares/auth.middleware");
 const adminOnly = require("../middlewares/adminOnly");
 
-// PUBLIC
-router.get("/:id", lessonController.getLessonById);
 
 // USER
+router.get("/:id", protect, lessonController.getLessonById);
 router.post("/:id/complete", protect, lessonController.completeLesson);
 
 // ADMIN
