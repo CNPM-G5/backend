@@ -44,7 +44,21 @@ app.use("/api/lessons", lessonRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/progress", progressRoutes);
 
+<<<<<<< HEAD
 // SERVER START
+=======
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error("Unhandled Error:", err);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Internal Server Error",
+        error: typeof err === "object" ? err.toString() : err
+    });
+});
+
+
+>>>>>>> 62cea15 (anh vs change name)
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {

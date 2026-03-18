@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
+const cloudinary = require("../config/cloudinary");
 
 // ================= REGISTER =================
 const register = async (req, res) => {
@@ -164,10 +165,97 @@ const changePassword = async (req, res) => {
     }
 };
 
+const updateProfile = async (req, res) => {
+  const userId = req.user.id;
+  const { name } = req.body;
+
+  try {
+    if (!name) {
+      return res.status(400).json({
+        message: "Name is required"
+      });
+    }
+
+    const result = await pool.query(
+      "UPDATE users SET name=$1 WHERE id=$2 RETURNING id, name, email, avatar",
+      [name, userId]
+    );
+
+    res.json({
+      message: "Profile updated",
+      user: result.rows[0]
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+const updateAvatar = async (req, res) => {
+  try {
+    const { avatar_url } = req.body;
+    const userId = req.user.id;
+
+    if (!avatar_url?.trim()) {
+      return res.status(400).json({ message: "Invalid avatar URL" });
+    }
+
+    const { rows } = await pool.query(
+      "UPDATE users SET avatar_url=$1 WHERE id=$2 RETURNING id, name, email, avatar_url",
+      [avatar_url, userId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      message: "Avatar updated",
+      user: rows[0]
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const uploadAvatar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const file = req.file || req.files?.[0];
+
+    if (!file?.path) {
+      return res.status(400).json({ message: "Upload failed" });
+    }
+
+    const { rows } = await pool.query(
+      "UPDATE users SET avatar_url=$1 WHERE id=$2 RETURNING id, name, email, avatar_url",
+      [file.path, userId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      message: "Upload avatar success",
+      user: rows[0]
+    });
+
+  } catch (err) {
+    console.error("Upload error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
 
 module.exports = {
     register,
     login,
     getProfile,
-    changePassword
+    changePassword,
+    updateProfile,
+    updateAvatar,
+    uploadAvatar
 };
