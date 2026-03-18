@@ -44,9 +44,6 @@ app.use("/api/lessons", lessonRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/progress", progressRoutes);
 
-<<<<<<< HEAD
-// SERVER START
-=======
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error("Unhandled Error:", err);
@@ -58,7 +55,6 @@ app.use((err, req, res, next) => {
 });
 
 
->>>>>>> 62cea15 (anh vs change name)
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
