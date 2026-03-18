@@ -113,7 +113,7 @@ const login = async (req, res) => {
 const getProfile = async (req, res) => {
     try {
         const result = await pool.query(
-            "SELECT id, name, email, role, created_at FROM users WHERE id = $1",
+            "SELECT id, name, email, role, avatar_url, created_at FROM users WHERE id = $1",
             [req.user.id]
         );
 
@@ -177,7 +177,7 @@ const updateProfile = async (req, res) => {
     }
 
     const result = await pool.query(
-      "UPDATE users SET name=$1 WHERE id=$2 RETURNING id, name, email, avatar",
+      "UPDATE users SET name=$1 WHERE id=$2 RETURNING id, name, email, avatar_url",
       [name, userId]
     );
 
