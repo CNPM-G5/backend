@@ -119,13 +119,28 @@ exports.completeLesson = async (req, res) => {
 exports.createLesson = async (req, res) => {
   const { course_id, title, content, order_index } = req.body;
 
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(
+    await client.query("BEGIN");
+
+    // 1. Dời các lesson phía sau lên +1
+    await client.query(
+      `UPDATE lessons
+       SET order_index = order_index + 1
+       WHERE course_id = $1 AND order_index >= $2`,
+      [course_id, order_index]
+    );
+
+    // 2. Thêm lesson mới
+    const result = await client.query(
       `INSERT INTO lessons (course_id, title, content, order_index)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
       [course_id, title, content, order_index]
     );
+
+    await client.query("COMMIT");
 
     res.status(201).json({
       success: true,
@@ -133,11 +148,15 @@ exports.createLesson = async (req, res) => {
     });
 
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error(err);
+
     res.status(500).json({
       success: false,
       message: "Server error"
     });
+  } finally {
+    client.release();
   }
 };
 
@@ -181,19 +200,42 @@ exports.updateLesson = async (req, res) => {
 
 exports.deleteLesson = async (req, res) => {
   const { id } = req.params;
+  const client = await pool.connect();
 
   try {
-    const result = await pool.query(
-      "DELETE FROM lessons WHERE id = $1 RETURNING *",
+    await client.query("BEGIN");
+
+    // 1. Lấy thông tin lesson cần xoá
+    const lesson = await client.query(
+      "SELECT course_id, order_index FROM lessons WHERE id = $1",
       [id]
     );
 
-    if (result.rows.length === 0) {
+    if (lesson.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({
         success: false,
         message: "Lesson not found"
       });
     }
+
+    const { course_id, order_index } = lesson.rows[0];
+
+    // 2. Xoá lesson
+    await client.query(
+      "DELETE FROM lessons WHERE id = $1",
+      [id]
+    );
+
+    // 3. Dồn lại order_index
+    await client.query(
+      `UPDATE lessons
+       SET order_index = order_index - 1
+       WHERE course_id = $1 AND order_index > $2`,
+      [course_id, order_index]
+    );
+
+    await client.query("COMMIT");
 
     res.json({
       success: true,
@@ -201,10 +243,14 @@ exports.deleteLesson = async (req, res) => {
     });
 
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error(err);
+
     res.status(500).json({
       success: false,
       message: "Server error"
     });
+  } finally {
+    client.release();
   }
 };
