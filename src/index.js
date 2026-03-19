@@ -5,7 +5,7 @@ require('dotenv').config();
 const allowedOrigins = [
     'http://localhost:5173',            // Vite local dev
     'http://localhost:5174',            // Vite local dev (alternate port)
-    'https://frontend-ghod.vercel.app'  // Vercel production
+    'https://plearn-g5.vercel.app/login'  // Vercel production
 ];
 
 const app = express();
