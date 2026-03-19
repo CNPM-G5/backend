@@ -13,6 +13,13 @@ const register = async (req, res) => {
         });
     }
 
+    // Validate email format @gmail.com
+    if (!email.toLowerCase().endsWith("@gmail.com")) {
+        return res.status(400).json({
+            message: "Email phải có định dạng @gmail.com"
+        });
+    }
+
     try {
         const existing = await pool.query(
             "SELECT id FROM users WHERE email = $1",
@@ -61,6 +68,13 @@ const login = async (req, res) => {
     if (!email || !password) {
         return res.status(400).json({
             message: "Vui lòng nhập email và password"
+        });
+    }
+
+    // Validate email format @gmail.com
+    if (!email.toLowerCase().endsWith("@gmail.com")) {
+        return res.status(400).json({
+            message: "Email phải có định dạng @gmail.com"
         });
     }
 

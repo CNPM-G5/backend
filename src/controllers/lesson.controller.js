@@ -119,6 +119,21 @@ exports.completeLesson = async (req, res) => {
 exports.createLesson = async (req, res) => {
   const { course_id, title, content, order_index } = req.body;
 
+  // Validate inputs
+  if (!course_id || !title || !content || order_index === undefined || order_index === null) {
+    return res.status(400).json({
+      success: false,
+      message: "Vui lòng điền đầy đủ thông tin bài học"
+    });
+  }
+
+  if (order_index < 1 || !Number.isInteger(Number(order_index))) {
+    return res.status(400).json({
+      success: false,
+      message: "Thứ tự bài học phải là số nguyên dương"
+    });
+  }
+
   const client = await pool.connect();
 
   try {
@@ -165,8 +180,54 @@ exports.updateLesson = async (req, res) => {
   const { id } = req.params;
   const { title, content, order_index } = req.body;
 
+  const client = await pool.connect();
+
   try {
-    const result = await pool.query(
+    await client.query("BEGIN");
+
+    // 1. Lấy lesson cũ để biết course_id và order_index cũ
+    const oldLessonResult = await client.query(
+      "SELECT course_id, order_index FROM lessons WHERE id = $1",
+      [id]
+    );
+
+    if (oldLessonResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        success: false,
+        message: "Lesson not found"
+      });
+    }
+
+    const oldLesson = oldLessonResult.rows[0];
+    const oldOrderIndex = oldLesson.order_index;
+    const courseId = oldLesson.course_id;
+
+    // 2. Nếu order_index thay đổi, cần dời các lesson khác
+    if (order_index !== oldOrderIndex) {
+      if (order_index < oldOrderIndex) {
+        // Nếu dời sang trái (order_index giảm)
+        // Tăng order_index của các lesson từ order_index mới đến cũ-1
+        await client.query(
+          `UPDATE lessons
+           SET order_index = order_index + 1
+           WHERE course_id = $1 AND id != $2 AND order_index >= $3 AND order_index < $4`,
+          [courseId, id, order_index, oldOrderIndex]
+        );
+      } else {
+        // Nếu dời sang phải (order_index tăng)
+        // Giảm order_index của các lesson từ cũ+1 đến order_index mới
+        await client.query(
+          `UPDATE lessons
+           SET order_index = order_index - 1
+           WHERE course_id = $1 AND id != $2 AND order_index > $3 AND order_index <= $4`,
+          [courseId, id, oldOrderIndex, order_index]
+        );
+      }
+    }
+
+    // 3. Update lesson
+    const result = await client.query(
       `UPDATE lessons
        SET title = $1,
            content = $2,
@@ -176,12 +237,7 @@ exports.updateLesson = async (req, res) => {
       [title, content, order_index, id]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Lesson not found"
-      });
-    }
+    await client.query("COMMIT");
 
     res.json({
       success: true,
@@ -189,11 +245,14 @@ exports.updateLesson = async (req, res) => {
     });
 
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error(err);
     res.status(500).json({
       success: false,
       message: "Server error"
     });
+  } finally {
+    client.release();
   }
 };
 
