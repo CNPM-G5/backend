@@ -34,7 +34,7 @@ app.use(express.json());
 
 // Health check
 app.get('/', (req, res) => {
-    res.json({ message: 'PLearn API is running 🚀' });
+    res.json({ message: 'PLearn API is running ' });
 });
 
 // USE ROUTES

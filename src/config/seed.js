@@ -9,7 +9,7 @@ async function seed() {
     );
 
     if (existingCourse.rows.length > 0) {
-      console.log("⚠️  Seed data đã tồn tại, bỏ qua để tránh trùng lặp");
+      console.log("Seed data đã tồn tại, bỏ qua để tránh trùng lặp");
       process.exit(0);
     }
 
@@ -33,10 +33,10 @@ async function seed() {
       [courseId]
     );
 
-    console.log("✅ Seed done");
+    console.log("Seed done");
     process.exit(0);
   } catch (err) {
-    console.error("❌ Seed failed:", err);
+    console.error("Seed failed:", err);
     process.exit(1);
   }
 }
