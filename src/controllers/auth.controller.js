@@ -1,267 +1,92 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const pool = require("../config/db");
-const cloudinary = require("../config/cloudinary");
+const authService = require("../services/auth.service");
 
-// ================= REGISTER =================
+function handleError(res, err) {
+    const status = err.status || 500;
+    return res.status(status).json({
+        message: err.message || "Lỗi server",
+    });
+}
+
 const register = async (req, res) => {
-    const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-        return res.status(400).json({
-            message: "Vui lòng điền đầy đủ thông tin"
-        });
-    }
-
-    // Validate email format @gmail.com
-    if (!email.toLowerCase().endsWith("@gmail.com")) {
-        return res.status(400).json({
-            message: "Email phải có định dạng @gmail.com"
-        });
-    }
-
     try {
-        const existing = await pool.query(
-            "SELECT id FROM users WHERE email = $1",
-            [email]
-        );
-
-        if (existing.rows.length > 0) {
-            return res.status(409).json({
-                message: "Email đã được sử dụng"
-            });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const result = await pool.query(
-            `INSERT INTO users (name, email, password) 
-             VALUES ($1, $2, $3) 
-             RETURNING id, name, email, role, created_at`,
-            [name, email, hashedPassword]
-        );
-
-        const user = result.rows[0];
-
-        const token = jwt.sign(
-            { id: user.id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
-
-        res.status(201).json({
-            message: "Đăng ký thành công",
-            token,
-            user
-        });
-
+        const { name, email, password } = req.body;
+        const result = await authService.register({ name, email, password });
+        return res.status(201).json(result);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Lỗi server" });
+        return handleError(res, err);
     }
 };
 
-// ================= LOGIN =================
 const login = async (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-        return res.status(400).json({
-            message: "Vui lòng nhập email và password"
-        });
-    }
-
-    // Validate email format @gmail.com
-    if (!email.toLowerCase().endsWith("@gmail.com")) {
-        return res.status(400).json({
-            message: "Email phải có định dạng @gmail.com"
-        });
-    }
-
     try {
-        const result = await pool.query(
-            "SELECT * FROM users WHERE email = $1",
-            [email]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(401).json({
-                message: "Email hoặc mật khẩu không đúng"
-            });
-        }
-
-        const user = result.rows[0];
-
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            return res.status(401).json({
-                message: "Email hoặc mật khẩu không đúng"
-            });
-        }
-
-        const token = jwt.sign(
-            { id: user.id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
-
-        res.json({
-            message: "Đăng nhập thành công",
-            token,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role
-            }
-        });
-
+        const { email, password } = req.body;
+        const result = await authService.login({ email, password });
+        return res.json(result);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Lỗi server" });
+        return handleError(res, err);
     }
 };
 
-// ================= PROFILE =================
 const getProfile = async (req, res) => {
     try {
-        const result = await pool.query(
-            "SELECT id, name, email, role, avatar_url, created_at FROM users WHERE id = $1",
-            [req.user.id]
-        );
-
-        res.json({
-            user: result.rows[0]
-        });
+        const result = await authService.getProfile(req.user.id);
+        return res.json(result);
     } catch (err) {
-        res.status(500).json({ message: "Lỗi server" });
+        return handleError(res, err);
     }
 };
 
-// ================= CHANGE PASSWORD =================
 const changePassword = async (req, res) => {
-    const userId = req.user.id;
-    const { oldPassword, newPassword } = req.body;
-
     try {
-        const user = await pool.query(
-            "SELECT password FROM users WHERE id=$1",
-            [userId]
-        );
-
-        if (user.rows.length === 0) {
-            return res.status(404).json({ message: "Không tìm thấy người dùng" });
-        }
-
-        const validPassword = await bcrypt.compare(
+        const { oldPassword, newPassword } = req.body;
+        const result = await authService.changePassword({
+            userId: req.user.id,
             oldPassword,
-            user.rows[0].password
-        );
-
-        if (!validPassword) {
-            return res.status(400).json({ message: "Mật khẩu cũ không đúng" });
-        }
-
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        await pool.query(
-            "UPDATE users SET password=$1 WHERE id=$2",
-            [hashedPassword, userId]
-        );
-
-        res.json({
-            message: "Đổi mật khẩu thành công"
+            newPassword,
         });
-
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+        return res.json(result);
+    } catch (err) {
+        return handleError(res, err);
     }
 };
 
 const updateProfile = async (req, res) => {
-  const userId = req.user.id;
-  const { name } = req.body;
-
-  try {
-    if (!name) {
-      return res.status(400).json({
-        message: "Name is required"
-      });
+    try {
+        const { name } = req.body;
+        const result = await authService.updateProfile({
+            userId: req.user.id,
+            name,
+        });
+        return res.json(result);
+    } catch (err) {
+        return handleError(res, err);
     }
-
-    const result = await pool.query(
-      "UPDATE users SET name=$1 WHERE id=$2 RETURNING id, name, email, avatar_url",
-      [name, userId]
-    );
-
-    res.json({
-      message: "Profile updated",
-      user: result.rows[0]
-    });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 };
 
-
 const updateAvatar = async (req, res) => {
-  try {
-    const { avatar_url } = req.body;
-    const userId = req.user.id;
-
-    if (!avatar_url?.trim()) {
-      return res.status(400).json({ message: "Invalid avatar URL" });
+    try {
+        const { avatar_url } = req.body;
+        const result = await authService.updateAvatar({
+            userId: req.user.id,
+            avatarUrl: avatar_url,
+        });
+        return res.json(result);
+    } catch (err) {
+        return handleError(res, err);
     }
-
-    const { rows } = await pool.query(
-      "UPDATE users SET avatar_url=$1 WHERE id=$2 RETURNING id, name, email, avatar_url",
-      [avatar_url, userId]
-    );
-
-    if (!rows.length) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json({
-      message: "Avatar updated",
-      user: rows[0]
-    });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: err.message });
-  }
 };
 
 const uploadAvatar = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const file = req.file || req.files?.[0];
-
-    if (!file?.path) {
-      return res.status(400).json({ message: "Upload failed" });
+    try {
+        const file = req.file || req.files?.[0];
+        const result = await authService.uploadAvatar({
+            userId: req.user.id,
+            filePath: file?.path,
+        });
+        return res.json(result);
+    } catch (err) {
+        return handleError(res, err);
     }
-
-    const { rows } = await pool.query(
-      "UPDATE users SET avatar_url=$1 WHERE id=$2 RETURNING id, name, email, avatar_url",
-      [file.path, userId]
-    );
-
-    if (!rows.length) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json({
-      message: "Upload avatar success",
-      user: rows[0]
-    });
-
-  } catch (err) {
-    console.error("Upload error:", err);
-    res.status(500).json({ message: err.message });
-  }
 };
 
 module.exports = {
@@ -271,5 +96,5 @@ module.exports = {
     changePassword,
     updateProfile,
     updateAvatar,
-    uploadAvatar
+    uploadAvatar,
 };
